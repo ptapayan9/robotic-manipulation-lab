@@ -13,7 +13,8 @@ int main() {
     const double min_angle_rad = -1.0;
     const double max_angle_rad = 1.0;
 
-    const double correction_fraction = 0.5;
+    const double gain_per_second = 2.0; // gain converts error into the requested velocity
+    const double time_step_s = 0.1; // each update represents x in seconds
 
     if (target_angle_rad < min_angle_rad || target_angle_rad > max_angle_rad ){
         std::cerr << "Target angle is outside the permitted range. \n";
@@ -26,14 +27,19 @@ int main() {
     for (int step = 0; step < max_steps; ++step){
 
         const double position_error_rad = calculate_position_rad(target_angle_rad, current_angle_rad);
-
         if (std::abs(position_error_rad) <= tolerance_rad){
             break;
         }
 
-        current_angle_rad = current_angle_rad + correction_fraction * position_error_rad;
+        const double angular_velocity_rad_s = gain_per_second * position_error_rad;
+        current_angle_rad = current_angle_rad + angular_velocity_rad_s * time_step_s;
+        const double elapsed_time_s = (step + 1) * time_step_s;
 
-        std::cout << "Step" << step + 1 << ": angle= " << current_angle_rad << " rad\n";
+
+        std::cout << "Time: " << elapsed_time_s
+                  << " s | Angle: " << current_angle_rad
+                  << " rad | Commanded velocity: " << angular_velocity_rad_s
+                  << " rad/s\n";
     }
 
     const double final_error_rad = calculate_position_rad(target_angle_rad, current_angle_rad);
