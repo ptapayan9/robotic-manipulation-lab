@@ -1,21 +1,48 @@
-# Robotic Manipulation Lab
+# Robotic Tabletop Arm Manipulation
 
-A simulation-first learning project in modern C++, robot manipulation, imitation learning, and reliable robot operation—progressing toward a physical tabletop arm.
+A robotics project building toward a tabletop arm that can pick up and place objects. It starts with joint control in C++20, then progresses toward physics simulation, learned manipulation, and eventual deployment on a physical arm.
 
-**Status:** Planning. No robot implementation or infrastructure has been provisioned.
+The intended end-to-end task is to observe an object on a table, move the arm to grasp it, verify the grasp, and place it at a destination. The project develops these capabilities incrementally, beginning with the feedback calculations behind a single joint.
 
-The eventual demonstration: observe a tabletop, select an object, grasp it, verify success, place it in a tray, and recover from a failed grasp. Begin with one simulated arm, one block, and one destination. Language instructions and more varied objects are later extensions.
+## What it does today
 
-## Project documents
+The current program is a command-line numerical model of one rotating joint. It:
 
-- [Start here](docs/START_HERE.md): shared context and a copyable prompt for new chats.
+- Validates a target angle against permitted joint limits.
+- Calculates position error as target minus current angle.
+- Uses proportional feedback to turn that error into a requested angular velocity.
+- Updates the angle in fixed modeled time steps.
+- Stops when the angle is within tolerance or the update limit is reached.
+- Prints modeled time, angle, commanded velocity, and the final position error.
 
-- [Project plan](docs/PROJECT_PLAN.md): goals, architecture, stack, milestones, and engineering practices.
-- [Learning roadmap](docs/LEARNING_ROADMAP.md): subjects, books/courses, project exercises, and progression.
-- [Topic guide](docs/TOPICS.md): suggested separate chats and prompts.
-- [Progress](docs/PROGRESS.md): current state, unresolved decisions, and handoff notes.
-- [Agent instructions](AGENTS.md): learning preferences and rules for working in this repository.
+This is an idealized calculation: the joint follows the requested velocity perfectly. Physics, rendering, grasping, and hardware control are not implemented yet.
 
-The current repository name is `robotic-manipulation-lab`. **GraspLab** was the preferred public-name suggestion; branding and availability are not finalized.
+## Build and run
 
-This is an educational project. Physical deployment requires hardware-specific validation; simulation results do not establish safety certification or production readiness.
+Requires a C++20-compatible compiler, such as Clang or GCC. From the repository root:
+
+```sh
+mkdir -p build
+c++ -std=c++20 -Wall -Wextra -pedantic src/main.cpp -o build/robot_lab
+./build/robot_lab
+```
+
+The example settings are defined in `src/main.cpp`:
+
+| Setting | Value |
+| --- | --- |
+| Initial angle | 0.2 rad |
+| Target angle | 0.5 rad |
+| Permitted target range | −1.0 to 1.0 rad |
+| Proportional gain | 2.0 s⁻¹ |
+| Time step | 0.1 s |
+| Position tolerance | 0.01 rad |
+| Maximum updates | 20 |
+
+With these settings, the program reaches approximately **0.491556 rad after 16 updates**, leaving an error of approximately **0.00844425 rad**. Those updates represent 1.6 seconds of modeled motion; execution does not wait for real time to pass.
+
+## Project direction
+
+Future work will extend this foundation to bounded velocity commands, joint dynamics in MuJoCo, and a simulated arm performing pick-and-place tasks. Python-based learning workflows will support exploration of imitation learning and evaluation of manipulation policies. Physical hardware comes later, after the simulation and control foundations are established.
+
+Immediate motion control and stopping will remain local to the robot. Workflow orchestration, experiment storage, and observability will be introduced as the project grows and needs them.
